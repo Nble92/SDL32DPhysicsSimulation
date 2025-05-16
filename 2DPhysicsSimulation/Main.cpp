@@ -57,7 +57,7 @@ int main()
 
 				case SDLK_UP:
 					cout << "Up key pressed" << endl;
-					r.y -= 50;
+					r.y -= 250;
 					break;
 				case SDLK_DOWN:
 					cout << "Down key pressed" << endl;
@@ -87,14 +87,28 @@ int main()
 
 
 		}
+		
+			r.y += physics::GRAVITY * 0.1f; // Apply gravity to the rectangle's y position
 
+			//else 
+		if (r.y + r.h >= flr.y) // Check if the rectangle's bottom edge touches or passes the floor
+		{
+			r.y = flr.y - r.h; // Place the rectangle on top of the floor
+			// Apply friction or stop movement here
+		}
+
+	
+		
+
+		cout << "Rectangle position: (" << r.x << ", " << r.y << ")" << endl;
 		// Set the draw color to black for the background
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 		// Clear the window
 		SDL_RenderClear(renderer);
 
 		SDL_SetRenderDrawColor(renderer, 220, 100, 40, 255);
-		SDL_RenderFillRect(renderer, &r);		
+		SDL_RenderFillRect(renderer, &r);	
+	
 		SDL_SetRenderDrawColor(renderer, 173, 216, 230, 255);		
 		SDL_RenderFillRect(renderer, &flr);
 
