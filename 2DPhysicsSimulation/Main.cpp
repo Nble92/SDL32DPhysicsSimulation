@@ -21,7 +21,7 @@ public:
 	float velocityY = 0.0f;
 	float accelerationX = 0.0f;
 	float accelerationY = 0.0f;
-	float mass = 1.0f;
+	float mass = 4.0f;
 	float restitution = 0.5f; // Bounciness
 	float friction = 0.5f; // Friction coefficient
 
@@ -57,7 +57,7 @@ public:
 
 
 namespace physics {
-	constexpr float GRAVITY = 0.025f; // meters/sec²
+	constexpr float GRAVITY = 0.01f; // meters/sec²
 	constexpr float PIXELS_PER_METER = 100.0f;
 
 	void applyGravity(PhysicsObject& obj) {
@@ -98,16 +98,16 @@ int main()
 			else if (e.type == SDL_EVENT_KEY_DOWN) {
 				switch (e.key.key) {
 				case SDLK_RIGHT:
-					box.r.x += 50;
+					box.applyForce(3000.0, 0.0);
 					break;
 				case SDLK_LEFT:
-					box.r.x -= 50;
+					box.applyForce(-3000.0, 0.0);
 					break;
 				case SDLK_UP:
-					box.r.y -= 250;
+					box.applyForce(0.0, -3000.0);
 					break;
 				case SDLK_DOWN:
-					box.r.y += 50;
+					box.applyForce(0.0, 3000.0);
 					break;
 				}
 			}
@@ -121,7 +121,7 @@ int main()
 	
 		
 
-		//cout << "Rectangle position: (" << r.x << ", " << r.y << ")" << endl;
+		cout << "Rectangle position: (" << box.r.x << ", " << box.r.y << ")" << endl;
 		// Set the draw color to black for the background
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 		// Clear the window
