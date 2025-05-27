@@ -16,12 +16,13 @@ class PhysicsObject
 
 {
 public:
+	// x, y, width, height
 	SDL_FRect r{ 10, 10, 100, 100 };
 	float velocityX = 0.0f;
 	float velocityY = 0.0f;
 	float accelerationX = 0.0f;
 	float accelerationY = 0.0f;
-	float mass = 4.0f;
+	float mass = 1.0f;
 	float restitution = 0.5f; // Bounciness
 	float friction = 0.5f; // Friction coefficient
 
@@ -57,7 +58,7 @@ public:
 
 
 namespace physics {
-	constexpr float GRAVITY = 0.01f; // meters/sec²
+	constexpr float GRAVITY = 9.8f; // meters/sec²
 	constexpr float PIXELS_PER_METER = 100.0f;
 
 	void applyGravity(PhysicsObject& obj) {
@@ -69,11 +70,16 @@ namespace physics {
 SDL_FRect flr{ 0, SCREEN_HEIGHT - 4, SCREEN_WIDTH, 100 };
 PhysicsObject box;
 
-void update(PhysicsObject &obj,float deltaTime) {
-	// Update the physics object
-	
-	obj.update(deltaTime);
-	obj.handleFloorCollision(flr.y);
+namespace simulation {
+    void update(PhysicsObject& obj, float deltaTime) {
+        obj.update(deltaTime);
+        obj.handleFloorCollision(flr.y);
+    }
+
+	void log(PhysicsObject obj) {
+		cout << " position: (" << obj.r.x << ", " << obj.r.y << ")" << endl;
+
+	}
 }
 
 int main()
@@ -88,8 +94,8 @@ int main()
 	SDL_Init(SDL_INIT_VIDEO);
 	SDL_CreateWindowAndRenderer("Hello Window", SCREEN_WIDTH, SCREEN_HEIGHT, 0, &window, &renderer);
 	
-	update(box, 0.016f);
-
+	
+	// this is the game loop
 	while (running) {
 		while (SDL_PollEvent(&e)) {
 			if (e.type == SDL_EVENT_QUIT) {
@@ -114,20 +120,24 @@ int main()
 		}
 
 		// Apply physics update
-		update(box, 0.016f);
+		// this function updates the position of the box with a delta time of 0.016 seconds (60 FPS)
+		simulation::update(box, 0.016f);
+        SDL_Delay(16); // Delay for ~16 milliseconds per frame (1000ms / 60fps)
 		// Apply gravity
 		physics::applyGravity(box);
 
 	
-		
+		//simulation::log(box);
 
-		cout << "Rectangle position: (" << box.r.x << ", " << box.r.y << ")" << endl;
+		//cout << "Rectangle position: (" << box.r.x << ", " << box.r.y << ")" << endl;
 		// Set the draw color to black for the background
+		// the (r, g, b, a) is the color in RGBA format
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 		// Clear the window
 		SDL_RenderClear(renderer);
 
 		SDL_SetRenderDrawColor(renderer, 220, 100, 40, 255);
+		// this signature(renderer, rectangle) draws a rectangle on the screen
 		SDL_RenderFillRect(renderer, &box.r);	
 	
 		SDL_SetRenderDrawColor(renderer, 173, 216, 230, 255);		
@@ -135,11 +145,7 @@ int main()
 
 		SDL_RenderPresent(renderer);
 
-		// This draws a white pixel in the center of the window
-		/*SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-		SDL_RenderPoint(renderer, SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
-		SDL_RenderPresent(renderer);
-		SDL_Delay(10000);*/
+		
 	}
 
 
