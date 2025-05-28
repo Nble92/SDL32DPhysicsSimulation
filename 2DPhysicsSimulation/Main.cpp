@@ -8,7 +8,7 @@ enum screen {
 	 SCREEN_HEIGHT = 480
 };
 
-SDL_Event e;
+
 bool running = true;
 
 
@@ -67,36 +67,65 @@ namespace physics {
 	}
 }
 
-SDL_FRect flr{ 0, SCREEN_HEIGHT - 4, SCREEN_WIDTH, 100 };
-PhysicsObject box;
+
 
 namespace simulation {
+
+	const SDL_FRect flr{ 0, SCREEN_HEIGHT - 4, SCREEN_WIDTH, 100 };
+	PhysicsObject box;
+
+
     void update(PhysicsObject& obj, float deltaTime) {
         obj.update(deltaTime);
         obj.handleFloorCollision(flr.y);
     }
 
-	void log(PhysicsObject obj) {
+	void log(const PhysicsObject& obj) {
 		cout << " position: (" << obj.r.x << ", " << obj.r.y << ")" << endl;
 
 	}
+
+	
 }
 
-int main()
+namespace rendering {
 
-{
+	void renderScene(SDL_Renderer* renderer, PhysicsObject& box, SDL_FRect& flr) {
+		// Set background color and clear
+		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+		SDL_RenderClear(renderer);
 
+		// Draw the box
+		SDL_SetRenderDrawColor(renderer, 220, 100, 40, 255);
+		SDL_RenderFillRect(renderer, &box.r);
 
+		// Draw the floor
+		SDL_SetRenderDrawColor(renderer, 173, 216, 230, 255);
+		SDL_RenderFillRect(renderer, &flr);
 
-	SDL_Window* window = nullptr;
-	SDL_Renderer* renderer = nullptr;
+		// Present the rendered frame
+		SDL_RenderPresent(renderer);
+	}
 
-	SDL_Init(SDL_INIT_VIDEO);
-	SDL_CreateWindowAndRenderer("Hello Window", SCREEN_WIDTH, SCREEN_HEIGHT, 0, &window, &renderer);
-	
-	
-	// this is the game loop
-	while (running) {
+	SDL_Renderer* initWindowAndRenderer()
+	{
+		SDL_Window* window = nullptr;
+		SDL_Renderer* renderer = nullptr;
+
+		SDL_Init(SDL_INIT_VIDEO);
+		SDL_CreateWindowAndRenderer("Hello Window", SCREEN_WIDTH, SCREEN_HEIGHT, 0, &window, &renderer);
+
+		return renderer;
+	}
+
+}
+namespace inputHandling {
+	// This namespace can be used for input handling functions if needed
+
+	void controls() {
+		float defaultForce = 3000.0f; // Default force applied to the box
+
+		SDL_Event e;
 		while (SDL_PollEvent(&e)) {
 			if (e.type == SDL_EVENT_QUIT) {
 				running = false;
@@ -104,50 +133,53 @@ int main()
 			else if (e.type == SDL_EVENT_KEY_DOWN) {
 				switch (e.key.key) {
 				case SDLK_RIGHT:
-					box.applyForce(3000.0, 0.0);
+					simulation::box.applyForce(defaultForce, 0.0);
 					break;
 				case SDLK_LEFT:
-					box.applyForce(-3000.0, 0.0);
+					simulation::box.applyForce(-defaultForce, 0.0);
 					break;
 				case SDLK_UP:
-					box.applyForce(0.0, -3000.0);
+					simulation::box.applyForce(0.0, -defaultForce);
 					break;
 				case SDLK_DOWN:
-					box.applyForce(0.0, 3000.0);
+					simulation::box.applyForce(0.0, defaultForce);
+					break;
+				case SDLK_Q:
+					running = false;
 					break;
 				}
 			}
 		}
-
-		// Apply physics update
-		// this function updates the position of the box with a delta time of 0.016 seconds (60 FPS)
-		simulation::update(box, 0.016f);
-        SDL_Delay(16); // Delay for ~16 milliseconds per frame (1000ms / 60fps)
-		// Apply gravity
-		physics::applyGravity(box);
-
-	
-		//simulation::log(box);
-
-		//cout << "Rectangle position: (" << box.r.x << ", " << box.r.y << ")" << endl;
-		// Set the draw color to black for the background
-		// the (r, g, b, a) is the color in RGBA format
-		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-		// Clear the window
-		SDL_RenderClear(renderer);
-
-		SDL_SetRenderDrawColor(renderer, 220, 100, 40, 255);
-		// this signature(renderer, rectangle) draws a rectangle on the screen
-		SDL_RenderFillRect(renderer, &box.r);	
-	
-		SDL_SetRenderDrawColor(renderer, 173, 216, 230, 255);		
-		SDL_RenderFillRect(renderer, &flr);
-
-		SDL_RenderPresent(renderer);
-
-		
 	}
+}
 
+
+
+void gameLoop(SDL_Renderer* rndr)
+{
+	float deltaTime = 0.016f; // 60 FPS
+	inputHandling::controls();
+	// this function updates the position of the box with a delta time of 0.016 seconds (60 FPS)
+	simulation::update(simulation::box, deltaTime);
+	// Apply gravity
+	physics::applyGravity(simulation::box);
+	SDL_Delay(16); // Delay for ~16 milliseconds per frame (1000ms / 60fps)
+	rendering::renderScene(rndr, simulation::box, simulation::flr);
+}
+
+
+int main()
+
+{
+	SDL_Renderer* renderer = rendering::initWindowAndRenderer();
+	// this is the game loop
+	while (running) {
+		
+		gameLoop(renderer);
+
+	}
+	SDL_DestroyRenderer(renderer);
+	SDL_Quit();
 
 	return 0;
 
