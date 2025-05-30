@@ -90,7 +90,7 @@ namespace simulation {
 
 namespace rendering {
 
-	void renderScene(SDL_Renderer* renderer, PhysicsObject& box, SDL_FRect& flr) {
+	void renderScene(SDL_Renderer* renderer, PhysicsObject& box, const SDL_FRect& flr) {
 		// Set background color and clear
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 		SDL_RenderClear(renderer);
