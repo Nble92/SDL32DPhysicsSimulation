@@ -1,5 +1,7 @@
 #include "SDL3/SDL.h"
 #include <iostream>
+
+
 using namespace std;
 
 enum screen {
@@ -18,6 +20,10 @@ class PhysicsObject
 public:
 	// x, y, width, height
 	SDL_FRect r{ 10, 10, 100, 100 };
+	SDL_Texture* texture = nullptr; // Placeholder for texture, if needed
+	SDL_FPoint anchorPt{ r.w/2, r.h/2 }; // Position of the object
+	SDL_FlipMode flipMode = SDL_FLIP_NONE; // Flip mode for rendering
+	
 	float velocityX = 0.0f;
 	float velocityY = 0.0f;
 	float accelerationX = 0.0f;
@@ -25,6 +31,9 @@ public:
 	float mass = 1.0f;
 	float restitution = 0.5f; // Bounciness
 	float friction = 0.5f; // Friction coefficient
+	double angle = 0.0; // Angle in radians(theta)
+
+	
 
 	void applyForce(float forceX, float forceY) {
 		accelerationX += forceX / mass;
@@ -85,26 +94,50 @@ namespace simulation {
 
 	}
 
+	void logAngle(const PhysicsObject& obj) {
+		cout << " position: (" << obj.angle << ", " << obj.angle << ")" << endl;
+
+	}
 	
 }
 
 namespace rendering {
 
+	
+
+
+
+
+	
+
 	void renderScene(SDL_Renderer* renderer, PhysicsObject& box, const SDL_FRect& flr) {
+		
+		SDL_Surface* surface = SDL_CreateSurface(100, 100, SDL_PIXELFORMAT_RGBA32);
+		Uint32 color = SDL_MapSurfaceRGB(surface, 220, 100, 40);
+		SDL_FillSurfaceRect(surface, nullptr, color);
+		box.texture = SDL_CreateTextureFromSurface(renderer, surface);
+		
+
 		// Set background color and clear
 		SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
 		SDL_RenderClear(renderer);
 
 		// Draw the box
-		SDL_SetRenderDrawColor(renderer, 220, 100, 40, 255);
-		SDL_RenderFillRect(renderer, &box.r);
-
+		//SDL_SetRenderDrawColor(renderer, 220, 100, 40, 255);
+		/*SDL_RenderFillRect(renderer, &box.r);*/
+		if (box.texture) {
+			SDL_RenderTextureRotated(renderer, box.texture, nullptr, &box.r, box.angle, &box.anchorPt, box.flipMode);
+		}
 		// Draw the floor
 		SDL_SetRenderDrawColor(renderer, 173, 216, 230, 255);
 		SDL_RenderFillRect(renderer, &flr);
 
 		// Present the rendered frame
 		SDL_RenderPresent(renderer);
+
+		if (simulation::box.texture) {
+			SDL_DestroyTexture(simulation::box.texture);
+		}		SDL_DestroySurface(surface);
 	}
 
 	SDL_Renderer* initWindowAndRenderer()
@@ -147,6 +180,10 @@ namespace inputHandling {
 				case SDLK_Q:
 					running = false;
 					break;
+				case SDLK_D:
+					simulation::box.angle += 3.1; // Rotate clockwise
+					break;
+
 				}
 			}
 		}
@@ -177,6 +214,7 @@ int main()
 		
 		gameLoop(renderer);
 
+		simulation::logAngle(simulation::box);
 	}
 	SDL_DestroyRenderer(renderer);
 	SDL_Quit();
